@@ -1,0 +1,394 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"Sc",
+				"Scene	threejs.scenes"
+			],
+			[
+				"Camera",
+				"PerspectiveCamera	threejs.cameras"
+			],
+			[
+				"Webglren",
+				"WebGLRenderer	threejs.renderers"
+			],
+			[
+				"WebGl",
+				"WebGLRenderer	threejs.renderers"
+			],
+			[
+				"get",
+				"getPixel( x : Int , y : Int )	UInt"
+			],
+			[
+				"sub",
+				"subpol"
+			],
+			[
+				"st",
+				"STATIC	nape.phys.BodyType"
+			],
+			[
+				"GeomPoly",
+				"GeomPolyList	nape.geom"
+			],
+			[
+				"getpi",
+				"getPixel32( x : Int , y : Int )	UInt"
+			],
+			[
+				"a",
+				"angularVel	Float"
+			],
+			[
+				"ev",
+				"Event	flash.events"
+			],
+			[
+				"added",
+				"ADDED_TO_STAGE	String"
+			],
+			[
+				"Dyn",
+				"DYNAMIC"
+			],
+			[
+				"shape",
+				"Shape	flash.display"
+			],
+			[
+				"poly",
+				"Polygon	nape.shape"
+			],
+			[
+				"bod",
+				"Body	nape.phys"
+			],
+			[
+				"trace",
+				"Trace	flash.trace"
+			],
+			[
+				"tra",
+				"trace"
+			],
+			[
+				"en",
+				"ENTER_FRAME	String"
+			],
+			[
+				"li",
+				"Lib	class"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "/home/bart/Dropbox/projects/drone-delivery/padtest/index.html",
+			"settings":
+			{
+				"buffer_size": 443,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "/home/bart/Dropbox/projects/drone-delivery/padtest/package.json",
+			"settings":
+			{
+				"buffer_size": 220,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "",
+	"build_system_choices":
+	[
+	],
+	"build_varint": "",
+	"command_palette":
+	{
+		"height": 68.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"removep",
+				"Package Control: Remove Package"
+			],
+			[
+				"remove",
+				"Haxelib: Remove library"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"pac",
+				"Package Control: Remove Package"
+			],
+			[
+				"package",
+				"Package Control: Install Package"
+			],
+			[
+				"packe",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 352.0
+	},
+	"console":
+	{
+		"height": 391.0,
+		"history":
+		[
+			"import urllib.request,os,hashlib; h = 'eb2297e1a458f27d836c04bb0cbaf282' + 'd0e7a3098092775ccb37ca9d6b2e4b7d'; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); by = urllib.request.urlopen( 'http://packagecontrol.io/' + pf.replace(' ', '%20')).read(); dh = hashlib.sha256(by).hexdigest(); print('Error validating download (got %s instead of %s), please try manual install' % (dh, h)) if dh != h else open(os.path.join( ipp, pf), 'wb' ).write(by)",
+			"import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())"
+		]
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"expanded_folders":
+	[
+		"/home/bart/projects/drone-delivery"
+	],
+	"file_history":
+	[
+		"/home/bart/projects/altinstar-code/trunk/htmlclient/desktop/src/index.js",
+		"/home/bart/projects/altinstar-code/trunk/htmlclient/desktop/src/index.html",
+		"/home/bart/weber/share/tortilla/trunk/tortilla.js",
+		"/home/bart/Dropbox/projects/tankvolution/code/src/tankvolution/Main.hx",
+		"/home/bart/weber/share/haxe-common/trunk/tortilla/Tortilla.hx",
+		"/home/bart/Dropbox/projects/tankvolution/code/build/browser/script/tortilla/browsertortilla_0a0044e66ac49df356f4.js",
+		"/home/bart/weber/share/haxe-common/trunk/weber/game/assets/ThreeObjectAsset.hx",
+		"/home/bart/Dropbox/projects/tankvolution/code/tankvolution.sublime-project",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/Source/TerrainIsoFunction.hx",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/flash.sublime-build",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/project.xml",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/npm-debug.log",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/apache-ant-1.9.2-bin.tar.gz",
+		"/home/bart/Dropbox/projects/haxe/TerrainFun/android-sdk_r22.0.5-linux.tgz",
+		"/home/bart/.config/sublime-text-3/Packages/User/Preferences.sublime-settings",
+		"/home/bart/Dropbox/projects/haxetest/haxetest.sublime-project",
+		"/home/bart/Dropbox/projects/haxetest/src/Test.hx",
+		"/home/bart/Dropbox/projects/haxetest/build.hxml",
+		"/home/bart/Dropbox/projects/haxetest/src/compile.hxml",
+		"/home/bart/Dropbox/projects/haxetest/src/compile.hxml~",
+		"/home/bart/Dropbox/projects/haxetest/src/Test.hx~"
+	],
+	"find":
+	{
+		"height": 23.0
+	},
+	"find_in_files":
+	{
+		"height": 87.0,
+		"where_history":
+		[
+			"/home/bart/revora/revoradev/t3a/trunk/src"
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": false,
+		"find_history":
+		[
+			"ItemTeam",
+			"						",
+			"AABB",
+			"shape",
+			"Lib",
+			"		",
+			";\n",
+			"\n        ",
+			";\n"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+		],
+		"reverse": false,
+		"show_context": true,
+		"use_buffer2": true,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"selected": 0,
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "/home/bart/Dropbox/projects/drone-delivery/padtest/index.html",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 443,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								158,
+								158
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "/home/bart/Dropbox/projects/drone-delivery/padtest/package.json",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 220,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								218,
+								218
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JSON.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 1,
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 23.0
+	},
+	"input":
+	{
+		"height": 31.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.find_results":
+	{
+		"height": 0.0
+	},
+	"pinned_build_system": "",
+	"project": "drodelbart.sublime-project",
+	"replace":
+	{
+		"height": 42.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+			[
+				"index.",
+				"src/index.js"
+			],
+			[
+				"inde",
+				"src/index.html"
+			],
+			[
+				"torti",
+				"trunk/tortilla/Tortilla.hx"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"select_symbol":
+	{
+		"height": 0.0,
+		"last_filter": "",
+		"selected_items":
+		[
+		],
+		"width": 0.0
+	},
+	"selected_group": 0,
+	"settings":
+	{
+	},
+	"show_minimap": false,
+	"show_open_files": false,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 226.0,
+	"status_bar_visible": true,
+	"template_settings":
+	{
+	}
+}
