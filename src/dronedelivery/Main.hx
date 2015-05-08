@@ -1,6 +1,8 @@
 
 package dronedelivery;
 
+import dronedelivery.model.Drone;
+import dronedelivery.model.Entity;
 import js.Browser;
 import js.html.Gamepad;
 import nape.geom.Vec2;
@@ -24,15 +26,15 @@ class Main {
 	private var renderer:SystemRenderer;
 
 	private var hud:Container;
-	private var thrustBars:Array<Graphics>;
 
 	private var space:Space;
-	private var droneBody:Body;
-
 	private var spaceGraph:Container;
-	private var droneGraph:Graphics;
 
-	private static inline var ROTOR_DISTANCE = 100.0;
+	private var controllers:Array<Float->Void> = [];
+	private var entities:Array<Entity> = [];
+	private var views:Array<Dynamic> = [];
+
+	private var playerDrones:Array<Drone> = [];
 
 	// private var pad:Gamepad;
 
@@ -64,105 +66,222 @@ class Main {
 
 		renderer = Detector.autoDetectRenderer(Tortilla.canvas.width, Tortilla.canvas.height, options);
 
+
+
 		stage = new Container();
 
 		hud = new Container();
 		stage.addChild(hud);
 
-		
+		Tortilla.addEventListener(Tortilla.EV_RESIZED, adaptToSize);
+		adaptToSize();		
 
 		space = new Space(new Vec2(0, 500));
-
-		var rompOffset = 100;
-		var rompHeight = 30;
-		var rompWidth = 100;
-
-		droneBody = new Body();
-		droneBody.space = space;
-		droneBody.position.setxy(800, -400);
-
-		var sh = new Polygon(Polygon.box(rompWidth,rompHeight));
-		sh.translate(new Vec2(0,rompOffset));
-		droneBody.shapes.add(sh);
-
-		// droneBody.align(); //TODO
 
 		spaceGraph = new Container();
 		stage.addChild(spaceGraph);
 
-		droneGraph = new Graphics();
-		for (a in 0...2) {
+		// var bloom1 = untyped __js__("new PIXI.filters.BloomFilter()");
+		// bloom1.blur = 3;
+		// spaceGraph.filters = [bloom1];//, bloom2, bloom3];
 
-			droneGraph.lineStyle(4, 0x887766);
-			droneGraph.moveTo(([-1,1][a]) * rompWidth * 0.4,-(rompHeight/2)+rompOffset);
-			droneGraph.lineTo(([-1,1][a]) * (ROTOR_DISTANCE - 5),-45);
+		var rompOffset = 70;
+		var rompHeight = 30*1.25;
+		var rompWidth = 80;
 
-			droneGraph.lineStyle();
-			droneGraph.beginFill(0xFFFF00);
-			droneGraph.drawRect(ROTOR_DISTANCE * ([-1,1][a]) - 10, -50, 20, 30);
+		function addDroneView(drone:Drone) {
+
+			var droneGraph = new Graphics();
+			for (a in 0...2) {
+
+				droneGraph.lineStyle(4, 0x887766);
+				droneGraph.moveTo(([-1,1][a]) * rompWidth * 0.4,-(rompHeight/2)+rompOffset);
+				droneGraph.lineTo(([-1,1][a]) * (drone.rotorDistance - 5),-45);
+
+				droneGraph.lineStyle();
+				droneGraph.beginFill(0xFFFF00);
+				droneGraph.drawRect(drone.rotorDistance * ([-1,1][a]) - 10, -50, 20, 30);
+				droneGraph.endFill();
+
+			}
+			droneGraph.beginFill(playerDrones.indexOf(drone) != -1 ? 0xFFFFFF : 0x888888);
+			droneGraph.drawRect(-rompWidth/2,-(rompHeight/2)+rompOffset,rompWidth,rompHeight);
 			droneGraph.endFill();
 
-			var sh2 = new Polygon(Polygon.rect(ROTOR_DISTANCE * ([-1,1][a]) - 10, -50, 20, 30));
-			sh2.body = droneBody;
-			sh2.material.density = 0;
+			var thrustBars = [];
+			for (a in 0...2) {
+				var bar = new Graphics();
+				thrustBars.push(bar);
 
+				bar.beginFill(0xFF8800);
+				bar.drawRect(-8, -100, 16, 100);
+				bar.endFill();
+
+		
+				droneGraph.addChild(bar);
+				bar.y = -20;
+				bar.x = (drone.rotorDistance) * ([-1,1][a]);
+
+			}
+
+			spaceGraph.addChild(droneGraph);
+
+			views.push({update: function(dt) {
+				droneGraph.position.x = drone.body.position.x;
+				droneGraph.position.y = drone.body.position.y;
+				droneGraph.rotation = drone.body.rotation;
+				for (a in 0...2)
+					thrustBars[a].scale.y = -drone.avgThrust[a];
+			}});
 
 		}
-		droneGraph.beginFill(0xFFFFFF);
-		droneGraph.drawRect(-rompWidth/2,-(rompHeight/2)+rompOffset,rompWidth,rompHeight);
-		droneGraph.endFill();
-		spaceGraph.addChild(droneGraph);
 
-		function addGround(x:Float, y:Float, width:Float, height:Float) {
+		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
+			var drone = new Drone(new Vec2(1700+px*300, -2000), space, rompOffset, rompHeight, rompWidth, 70);
+			playerDrones.push(drone);
+			entities.push(drone);
+			addDroneView(drone);
+			controllers.push(function(dt:Float) {
+
+				var pads = Browser.navigator.getGamepads();
+
+				for (a in 0...2) {
+				
+					var thrust;
+					if (KeyboardInput.isKeyDown([KeyboardInput.KEY_Q, KeyboardInput.KEY_P][a])) {
+						thrust = 0.75;
+					} else {
+						if (!Tortilla.parameters.has("nopad") && pads.length > 0 && pads[0] != null) {
+							var pad = pads[0];
+							var ax = [2,5][a];
+							thrust = Maths.rangeNormalize(pad.axes[ax], -1, 1);
+							thrust = Math.pow(thrust, 2);
+						} else {
+							thrust = 0.0;
+						}
+					}
+					drone.thrust[a] = thrust;
+
+				}
+			});
+
+			
+		}
+
+		var hdSeq = 0;
+		function addHoverDrone(rotorDistance:Float, pos:Vec2) {
+
+			var seq = hdSeq;
+			hdSeq += 1000;
+
+			var hoverDrone = new Drone(pos, space, rompOffset, rompHeight, rompWidth, rotorDistance);
+			entities.push(hoverDrone);
+			addDroneView(hoverDrone);
+
+			var targetHeight = hoverDrone.body.position.y;
+			var time = 0.0;
+			controllers.push(function(dt:Float) {
+
+				time += dt;
+
+				var timeVar = Math.abs((Math.sin(Math.floor(time / 5) + seq) * 1000) % 1);
+				var th = targetHeight - timeVar * 1000;
+
+				var thrust = Maths.clamp((hoverDrone.body.position.y - th + hoverDrone.body.velocity.y) / 300, 0, 1);
+
+				// var thrust = hoverDrone.body.position.y > targetHeight ? 1 : 0;
+				hoverDrone.thrust[0] = hoverDrone.thrust[1] = thrust;
+			});
+		}
+		addHoverDrone(40, new Vec2(1500, -1900));
+		addHoverDrone(100, new Vec2(2300, -2100));
+		addHoverDrone(200, new Vec2(500, -2500));
+
+		// ================ build level ==================== //
+
+		function addGround(x:Float, y:Float, width:Float, height:Float, color:Int = 0x8888FF, dyn = false) {
+
+			var cx = x+(width/2);
+			var cy = y+(height/2);
+
 			var gg = new Graphics();
-			gg.beginFill(0x0000FF);
-			gg.drawRect(0,0,width,height);
+			gg.beginFill(color);
+			gg.drawRect(-width/2,-height/2,width,height);
 			gg.endFill();
 			spaceGraph.addChild(gg);
-			gg.position.set(x, y);
+			gg.position.set(cx, cy);
 
-			var b = new Body(BodyType.STATIC);
-			var s = new Polygon(Polygon.rect(0,0,width,height));
+			var b = new Body(dyn ? BodyType.DYNAMIC : BodyType.STATIC);
+			var s = new Polygon(Polygon.box(width,height));
+			s.material.density *= 0.33;
 			s.body = b;
-			b.position.setxy(x, y);
+			b.position.setxy(cx, cy);
 			b.space = space;
 
+			if (dyn) views.push({update: function(dt) {
+				gg.position.x = b.position.x;
+				gg.position.y = b.position.y;
+				gg.rotation = b.rotation;
+			}});
+
 		}
+
+		var red = 0xFF4444;
+		var green = 0x66FF66;
+		var blue = 0x4444FF;
 
 		// bounds
-		addGround(0,-2000,3000,20); // top
-		addGround(0,-1980,20,1960); // left
-		addGround(0,-20,3000,20); // bottom
-		addGround(2980,-1980,20,1960); // right
+		addGround(-500,-3000,4500,20, red); // top
+		addGround(-500,-2980,20,2960, red); // left
+		addGround(-500,-20,4500,20, red); // bottom
+		addGround(3980,-2980,20,2960, red); // right
 
-		// platforms area 1
-		addGround(100,-800,150,20);
-		addGround(600,-750,150,20);
-		addGround(300,-400,150,20);
+		// --- platforms area 1
+		addGround(100,-800,150,20, green);
+		addGround(600,-750,150,20, green);
+		addGround(300,-400,150,20, green);
+		// on left wall
+		addGround(-430,-1000,150,20, green);
+		addGround(-440,-1400,150,20, green);
+		addGround(-450,-1800,150,20, green);
+		addGround(-460,-2200,150,20, green);
+		addGround(-470,-2600,150,20, green);
+		// on right
+		// addGround(900,-1000,150,20);
+		addGround(910,-1400,150,20);
+		addGround(920,-1800,150,20);
+		addGround(930,-2200,150,20);
+		addGround(940,-2600,150,20);
 
 		// gate to area 2
-		addGround(1100,-1980,20,(1960/2)-160);
-		addGround(1100,-1980+(1960/2)+160,20,(1960/2)-160);
-		addGround(1120,-1980+(1960/2)-160-20,700,20);
-		addGround(1120,-1980+(1960/2)+160,700,20);
+		addGround(1100,-2980,20,(1960/2)-160+1000); // top wall
+		addGround(1100,-1980+(1960/2)+160,20,(1960/2)-160); // bottom wall
+		addGround(1120,-1980+(1960/2)-160-20,700,20); // tunnel top
+		addGround(1120,-1980+(1960/2)+160,700,20); // tunnel bottom
 
 		addGround(2200,-1500,20,1000);
+		addGround(2220,-1500,200,20);
 
-		thrustBars = [];
-		for (a in 0...2) {
-			var bar = new Graphics();
-			thrustBars.push(bar);
 
-			bar.beginFill(0xFF8800);
-			bar.drawRect(-8, -50, 16, 50);
-			bar.endFill();
-
-	
-			droneGraph.addChild(bar);
-			bar.y = -20;
-			bar.x = (ROTOR_DISTANCE) * ([-1,1][a]);
-
+		// stack
+		function buildStack(count:Int, left:Float, bottom:Float, color:Int) {
+			var top = bottom-42;
+			while (count > 0) {
+				for (x in 0...count) {
+					addGround(left + 32*x, top, 30, 40, color, true);
+				}
+				count--;
+				left+=16;
+				top -= 40;
+			}
 		}
+		buildStack(8, 1400, 20, 0xFF44FF);
+		buildStack(5, 2230, -1500, 0x880000);
+
+		// ambush the hover drone
+		addGround(2450,-2500,200,20);
+		buildStack(6, 2450, -2500, 0x990000);
+
 
 		// Browser.window.addEventListener("gamepadconnected", function(e:Dynamic) {
 		// 	if (pad != null) return;
@@ -170,8 +289,6 @@ class Main {
 		// 	pad = e.gamepad;
 		// });
 
-		Tortilla.addEventListener(Tortilla.EV_RESIZED, adaptToSize);
-		adaptToSize();
 
 	}
 
@@ -179,15 +296,11 @@ class Main {
 		var w = Tortilla.canvas.width;
 		var h = Tortilla.canvas.height;
 		renderer.resize(w,h);
-
-		// thrustBars[1].x = w - 20;
-		// for (tb in thrustBars) tb.y = h - 10;
-
 	}
 
 	private var avgCamPos:Vec2 = null;
 
-	private var avgThrust = [0.0, 0.0];
+	
 
 	public function frame(ctx:Dynamic, dt:Float) {
 
@@ -196,62 +309,37 @@ class Main {
 
 		KeyboardInput.process();
 
+		for (c in controllers) c(dt);
+		
+
+		// move the world
+		for (e in entities) e.step(dt);
 		space.step(dt);
 
-		var camPos = droneBody.position.add(droneBody.velocity.mul(0.33));
+		for (v in views) v.update(dt);
+
+		// --- update camera
+
+		var pdPos = new Vec2();
+		var pdVel = new Vec2();
+		for (pd in playerDrones) {
+			pdPos = pdPos.add(pd.body.position);
+			pdVel = pdVel.add(pd.body.velocity);
+		}
+		trace(pdPos.x, pdPos.x);
+		pdPos = pdPos.mul(1/playerDrones.length);
+		pdVel = pdVel.mul(1/playerDrones.length);
+
+		var camPos = pdPos.add(pdVel.mul(0.33));
 		if (avgCamPos == null) avgCamPos = camPos;
 		else {
 			avgCamPos.x = Maths.averageEase(avgCamPos.x, camPos.x, 5, dt);
 			avgCamPos.y = Maths.averageEase(avgCamPos.y, camPos.y, 5, dt);
-		} 
-
+		}
 		spaceGraph.position.set(
 			-avgCamPos.x + Tortilla.canvas.width/2,
 			-avgCamPos.y + Tortilla.canvas.height/2
 		);
-
-		for (a in 0...2) {
-			
-			var thrust;
-			if (KeyboardInput.isKeyDown([KeyboardInput.KEY_Q, KeyboardInput.KEY_P][a])) {
-				thrust = 1.0;
-			} else {
-				if (!Tortilla.parameters.has("nopad") && pads.length > 0 && pads[0] != null) {
-					var pad = pads[0];
-					var ax = [2,5][a];
-					thrust = Maths.rangeNormalize(pad.axes[ax], -1, 1);
-				} else {
-					thrust = 0.0;
-				}
-			}
-
-			avgThrust[a] = Maths.averageEase(avgThrust[a], thrust, 20, dt);
-			var avg = avgThrust[a];
-
-			// avg = Maths.rangeExpand(avg, 0.5, 1);
-
-			var bar = thrustBars[a];
-			bar.scale.y = -avg;
-
-			// thrust = Math.pow(thrust, 1.5);
-
-
-
-			var force = new Vec2(0, -1500);
-			force = force.mul(avg);
-			force = force.mul(dt);
-			force.rotate(droneBody.rotation);
-			
-			var point = new Vec2(ROTOR_DISTANCE * [-1,1][a], -50);
-			point = droneBody.localPointToWorld(point);
-			// Browser.window.console.log(force.x, force.y, point.x, point.y);
-			droneBody.applyImpulse(force, point);
-
-		}
-
-		droneGraph.position.x = droneBody.position.x;
-		droneGraph.position.y = droneBody.position.y;
-		droneGraph.rotation = droneBody.rotation;
 
 		renderer.render(stage);
 
