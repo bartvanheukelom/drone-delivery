@@ -85,44 +85,89 @@ class Main {
 		// bloom1.blur = 3;
 		// spaceGraph.filters = [bloom1];//, bloom2, bloom3];
 
-		var rompOffset = 70;
+		var rompOffset = 100;
 		var rompHeight = 30*1.25;
 		var rompWidth = 80;
+		var rotorDistance = 50;
 
 		function addDroneView(drone:Drone) {
+
+			var ox = -drone.massCenter.x;
+			var oy = -drone.massCenter.y;
+			trace(ox, oy);
 
 			var droneGraph = new Graphics();
 			for (a in 0...2) {
 
 				droneGraph.lineStyle(4, 0x887766);
-				droneGraph.moveTo(([-1,1][a]) * rompWidth * 0.4,-(rompHeight/2)+rompOffset);
-				droneGraph.lineTo(([-1,1][a]) * (drone.rotorDistance - 5),-45);
+				droneGraph.moveTo(ox + ([-1,1][a]) * rompWidth * 0.4, oy + -(rompHeight/2)+rompOffset);
+				droneGraph.lineTo(ox + ([-1,1][a]) * (drone.rotorDistance - 5), oy + -45);
 
 				droneGraph.lineStyle();
 				droneGraph.beginFill(0xFFFF00);
-				droneGraph.drawRect(drone.rotorDistance * ([-1,1][a]) - 10, -50, 20, 30);
+				droneGraph.drawRect(ox + drone.rotorDistance * ([-1,1][a]) - 10, oy + -50, 20, 30);
 				droneGraph.endFill();
 
 			}
 			droneGraph.beginFill(playerDrones.indexOf(drone) != -1 ? 0xFFFFFF : 0x888888);
-			droneGraph.drawRect(-rompWidth/2,-(rompHeight/2)+rompOffset,rompWidth,rompHeight);
+			droneGraph.drawRect(ox + -rompWidth/2, oy + -(rompHeight/2)+rompOffset,rompWidth,rompHeight);
 			droneGraph.endFill();
 
-			var thrustBars = [];
+			droneGraph.beginFill(0x009900);
+			droneGraph.drawCircle(0,0,1);
+			droneGraph.endFill();
+
+			var fbs = 0.05;
+
 			for (a in 0...2) {
 				var bar = new Graphics();
-				thrustBars.push(bar);
 
 				bar.beginFill(0xFF8800);
 				bar.drawRect(-8, -100, 16, 100);
 				bar.endFill();
+				bar.visible = false;
 
-		
 				droneGraph.addChild(bar);
-				bar.y = -20;
-				bar.x = (drone.rotorDistance) * ([-1,1][a]);
+				bar.y = oy-20;
+				bar.x = ox+(drone.rotorDistance) * ([-1,1][a]);
+
+				var forcebar = new Graphics();
+				forcebar.beginFill(0xFF8800);
+				forcebar.drawRect(0,-2,fbs,4);
+				forcebar.endFill();
+				forcebar.y = oy-50;
+				forcebar.x = ox+(drone.rotorDistance) * ([-1,1][a]);
+				droneGraph.addChild(forcebar);
+
+				views.push({update: function(dt) {
+					bar.scale.y = -drone.avgThrust[a];
+					forcebar.rotation = drone.thrustForce[a].angle;
+					forcebar.rotation -= droneGraph.rotation;
+					forcebar.scale.x = drone.thrustForce[a].length;
+				}});
+
 
 			}
+
+			var finbar = new Graphics();
+			finbar.beginFill(0x0000FF);
+			finbar.drawRect(0,-2,fbs,4);
+			finbar.endFill();
+			finbar.y = oy-30;
+			droneGraph.addChild(finbar);
+
+			var bodyairbar = new Graphics();
+			bodyairbar.beginFill(0x0000FF);
+			bodyairbar.drawRect(0,-2,fbs,4);
+			bodyairbar.endFill();
+			bodyairbar.y = oy+rompOffset;
+			droneGraph.addChild(bodyairbar);
+
+			var vbar = new Graphics();
+			vbar.beginFill(0x00FF00);
+			vbar.drawRect(0,-2,fbs,4);
+			vbar.endFill();
+			droneGraph.addChild(vbar);
 
 			spaceGraph.addChild(droneGraph);
 
@@ -130,14 +175,25 @@ class Main {
 				droneGraph.position.x = drone.body.position.x;
 				droneGraph.position.y = drone.body.position.y;
 				droneGraph.rotation = drone.body.rotation;
-				for (a in 0...2)
-					thrustBars[a].scale.y = -drone.avgThrust[a];
+				
+				finbar.rotation = drone.finForce.angle;
+				finbar.rotation -= droneGraph.rotation;
+				finbar.scale.x = drone.finForce.length;
+
+				bodyairbar.rotation = drone.bodyAirForce.angle;
+				bodyairbar.rotation -= droneGraph.rotation;
+				bodyairbar.scale.x = drone.bodyAirForce.length;
+
+				vbar.rotation = drone.body.velocity.angle;
+				vbar.rotation -= droneGraph.rotation;
+				vbar.scale.x = drone.body.velocity.length;
+
 			}});
 
 		}
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
-			var drone = new Drone(new Vec2(1700+px*300, -2000), space, rompOffset, rompHeight, rompWidth, 70);
+			var drone = new Drone(new Vec2(1700+px*300, -2000), space, rompOffset, rompHeight, rompWidth, rotorDistance);
 			playerDrones.push(drone);
 			entities.push(drone);
 			addDroneView(drone);
@@ -149,13 +205,13 @@ class Main {
 				
 					var thrust;
 					if (KeyboardInput.isKeyDown([KeyboardInput.KEY_Q, KeyboardInput.KEY_P][a])) {
-						thrust = 0.75;
+						thrust = 1.0;
 					} else {
 						if (!Tortilla.parameters.has("nopad") && pads.length > 0 && pads[0] != null) {
 							var pad = pads[0];
 							var ax = [2,5][a];
 							thrust = Maths.rangeNormalize(pad.axes[ax], -1, 1);
-							thrust = Math.pow(thrust, 2);
+							// thrust = Math.pow(thrust, 2);
 						} else {
 							thrust = 0.0;
 						}
@@ -234,7 +290,7 @@ class Main {
 		addGround(-500,-3000,4500,20, red); // top
 		addGround(-500,-2980,20,2960, red); // left
 		addGround(-500,-20,4500,20, red); // bottom
-		addGround(3980,-2980,20,2960, red); // right
+		// addGround(3980,-2980,20,2960, red); // right
 
 		// --- platforms area 1
 		addGround(100,-800,150,20, green);
@@ -313,10 +369,11 @@ class Main {
 		
 
 		// move the world
-		for (e in entities) e.step(dt);
-		space.step(dt);
+		var wdt = dt/1;
+		for (e in entities) e.step(wdt);
+		space.step(wdt);
 
-		for (v in views) v.update(dt);
+		for (v in views) v.update(wdt);
 
 		// --- update camera
 
@@ -325,10 +382,15 @@ class Main {
 		for (pd in playerDrones) {
 			pdPos = pdPos.add(pd.body.position);
 			pdVel = pdVel.add(pd.body.velocity);
+
+			// trace(pd.body.velocity.x, pd.body.localVectorToWorld(new Vec2(0,-70)).x);
+			// trace(pd.headVel.x, pd.headVel.y);
 		}
-		trace(pdPos.x, pdPos.x);
+		// trace(pdPos.x, pdPos.x);
 		pdPos = pdPos.mul(1/playerDrones.length);
 		pdVel = pdVel.mul(1/playerDrones.length);
+
+		if (pdVel.length > 200) pdVel.length = 200;
 
 		var camPos = pdPos.add(pdVel.mul(0.33));
 		if (avgCamPos == null) avgCamPos = camPos;
