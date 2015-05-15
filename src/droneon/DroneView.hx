@@ -12,7 +12,7 @@ class DroneView extends Container {
 	private var views:Array<Dynamic> = [];
 	private var drone:Drone;
 
-	public function new(drone:Drone, player:Bool) {
+	public function new(drone:Drone, player:Bool, spaceGraph:Container) {
 
 		super();
 
@@ -26,6 +26,18 @@ class DroneView extends Container {
 		var ox = -drone.massCenter.x;
 		var oy = -drone.massCenter.y;
 		trace(ox, oy);
+
+		var ballgraph = new Graphics();
+		ballgraph.beginFill(0x222222);
+		ballgraph.drawCircle(0, 0, 20);
+		ballgraph.endFill();
+		spaceGraph.addChild(ballgraph);
+
+		views.push(function(dt) {
+			ballgraph.position.x = drone.ball.position.x;
+			ballgraph.position.y = drone.ball.position.y;
+			ballgraph.rotation = drone.ball.rotation;
+		});
 
 		var droneGraph = new Graphics();
 		addChild(droneGraph);
@@ -133,6 +145,8 @@ class DroneView extends Container {
 			});
 
 		}
+
+		spaceGraph.addChild(this);
 
 	}
 

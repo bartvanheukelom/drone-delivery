@@ -110,13 +110,12 @@ class Main {
 		var rotorDistance = 75;
 
 		function addDroneView(drone:Drone) {
-			var v = new DroneView(drone, playerDrones.indexOf(drone) != -1);
+			var v = new DroneView(drone, playerDrones.indexOf(drone) != -1, spaceGraph);
 			views.push(v);
-			spaceGraph.addChild(v);
 		}
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
-			var drone = new Drone(new Vec2(1800+px*300, -200), space, rompOffset, rompHeight, rompWidth, rotorDistance);
+			var drone = new Drone(new Vec2(2200+px*300, -200), space, rompOffset, rompHeight, rompWidth, rotorDistance);
 			playerDrones.push(drone);
 			entities.push(drone);
 			addDroneView(drone);
@@ -192,7 +191,9 @@ class Main {
 
 			var b = new Body(dyn ? BodyType.DYNAMIC : BodyType.STATIC);
 			var s = new Polygon(Polygon.box(width,height));
-			s.material.density *= 0.33;
+			s.material.density *= 0.1;
+			s.material.dynamicFriction *= 5;
+			s.material.staticFriction *= 5;
 			s.body = b;
 			b.position.setxy(cx, cy);
 			b.space = space;
@@ -254,18 +255,24 @@ class Main {
 
 		// stack
 		function buildStack(count:Int, left:Float, bottom:Float, color:Int) {
-			var top = bottom-42;
+
+			var w = 36;
+			var h = 40;
+
+			var top = bottom-h;
 			while (count > 0) {
 				for (x in 0...count) {
-					addGround(left + 32*x, top, 30, 40, color, true);
+					addGround(left + w*x, top, w, h, color, true);
 				}
 				count--;
-				left+=16;
-				top -= 40;
+				left+=w/2;
+				top -= h;
 			}
 		}
 		buildStack(8, 1400, -20, 0xFF44FF);
 		buildStack(5, 2230, -1500, 0x880000);
+
+		buildStack(16, 2500, -20, 0x00FF00);
 
 		// ambush the hover drone
 		addGround(2450,-2500,200,20);

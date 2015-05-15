@@ -2,8 +2,10 @@
 package droneon.model;
 
 import js.Browser;
+import nape.constraint.DistanceJoint;
 import nape.geom.Vec2;
 import nape.phys.Body;
+import nape.shape.Circle;
 import nape.shape.Polygon;
 import nape.space.Space;
 import weber.Maths;
@@ -11,6 +13,7 @@ import weber.Maths;
 class Drone implements Entity {
 
 	public var body(default,null):Body;
+	public var ball:Body;
 
 	public var avgThrust(default,null) = [0.0, 0.0];
 	public var thrust = [0.0, 0.0];
@@ -50,6 +53,19 @@ class Drone implements Entity {
 
 		finPos = new Vec2(0, -30).sub(massCenter);
 		rompPos = new Vec2(0, rompOffset).sub(massCenter);
+
+		ball = new Body();
+		ball.position.set(body.position.add(new Vec2(0, 100)));
+		ball.space = space;
+
+		var ballsh = new Circle(20);
+		ballsh.material.density = 5;
+		ballsh.body = ball;
+
+		var chain = new DistanceJoint(body, ball, rompPos, new Vec2(0,0), 30, 210);
+		chain.stiff = false;
+		chain.damping = 1;
+		chain.space = space;
 
 	}
 
