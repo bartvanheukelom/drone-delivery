@@ -12,6 +12,8 @@ import weber.Maths;
 
 class Drone implements Entity {
 
+	private static inline var BALL = false;
+
 	public var body(default,null):Body;
 	public var ball:Body;
 
@@ -38,12 +40,16 @@ class Drone implements Entity {
 		body.position.set(pos);
 
 		var romp = new Polygon(Polygon.box(rompWidth,rompHeight));
-		romp.material.density *= 2;
+		romp.material.density *= 1.5;
 		romp.translate(new Vec2(0,rompOffset));
 		romp.body = body;
 
 		for (a in 0...2) {
-			var sh2 = new Polygon(Polygon.rect(rotorDistance * ([-1,1][a]) - 10, -50, 20, 30));
+			var sh2 = new Polygon(Polygon.rect(
+				rotorDistance * ([-1,1][a]) - 10, 
+				20,
+				20, 30
+			));
 			sh2.body = body;
 			// sh2.material.density *= 0.1;
 		}
@@ -51,21 +57,27 @@ class Drone implements Entity {
 		massCenter = body.localCOM.copy();
 		body.align();
 
-		finPos = new Vec2(0, -30).sub(massCenter);
+		finPos = new Vec2(0, 30).sub(massCenter);
 		rompPos = new Vec2(0, rompOffset).sub(massCenter);
 
-		ball = new Body();
-		ball.position.set(body.position.add(new Vec2(0, 100)));
-		ball.space = space;
+		if (!BALL) {
+			ball = null;
+		} else {
 
-		var ballsh = new Circle(20);
-		ballsh.material.density = 5;
-		ballsh.body = ball;
+			ball = new Body();
+			ball.position.set(body.position.add(new Vec2(0, -100)));
+			ball.space = space;
 
-		var chain = new DistanceJoint(body, ball, rompPos, new Vec2(0,0), 30, 210);
-		chain.stiff = false;
-		chain.damping = 1;
-		chain.space = space;
+			var ballsh = new Circle(20);
+			ballsh.material.density = 5;
+			ballsh.body = ball;
+
+			var chain = new DistanceJoint(body, ball, rompPos, new Vec2(0,0), 30, 210);
+			chain.stiff = false;
+			chain.damping = 1;
+			chain.space = space;
+
+		}
 
 	}
 
@@ -79,7 +91,7 @@ class Drone implements Entity {
 			var avg = avgThrust[a];
 
 			// create a thrust pointing up
-			var force = new Vec2(0, -3500);
+			var force = new Vec2(0, ball == null ? 3500 : 4500);
 			force = force.mul(avg);
 			
 			// it's in world space so apply body rotation
@@ -89,14 +101,14 @@ class Drone implements Entity {
 			// counter angular velocity
 			force.rotate(-body.angularVel * 0.1);
 			// lean upwards
-			force = force.add(Vec2.fromPolar(force.length*0.33, -Maths.HALFPI));
+			force = force.add(Vec2.fromPolar(force.length*0.33, Maths.HALFPI));
 			force = force.mul(1/1.33);
 
 			// make the force publicly readable
 			thrustForce[a] = force;
 			
 			// get thruster local position
-			var point = new Vec2(rotorDistance * [-1,1][a], -50).sub(massCenter);
+			var point = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
 
 			// fire!
 			body.applyImpulse(force.mul(dt), body.localPointToWorld(point));
