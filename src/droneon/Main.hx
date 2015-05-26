@@ -168,7 +168,7 @@ class Main {
 
 				var pads = Browser.navigator.getGamepads();
 
-				for (a in 0...2) {
+				for (a in 0...drone.thrusters.length) {
 				
 					var thrust;
 					if (KeyboardInput.isKeyDown([
@@ -179,14 +179,14 @@ class Main {
 					} else {
 						if (!Tortilla.parameters.has("nopad") && pads.length > px && pads[px] != null) {
 							var pad = pads[px];
-							var ax = [2,5][a];
+							var ax = [2,5,0,1,3,4][a];
 							thrust = Maths.rangeNormalize(pad.axes[ax], -1, 1);
 							// thrust = Math.pow(thrust, 2);
 						} else {
 							thrust = 0.0;
 						}
 					}
-					drone.thrust[a] = thrust;
+					drone.thrusters[a].inThrust = thrust;
 
 				}
 			});
@@ -216,7 +216,8 @@ class Main {
 				var thrust = Maths.clamp((hoverDrone.body.position.y - th + hoverDrone.body.velocity.y) / 300, 0, 1);
 
 				// var thrust = hoverDrone.body.position.y > targetHeight ? 1 : 0;
-				hoverDrone.thrust[0] = hoverDrone.thrust[1] = thrust;
+				for (t in 0...2)
+					hoverDrone.thrusters[t].inThrust = thrust;
 			});
 		}
 		// addHoverDrone(40, new Vec2(1500, 1900));

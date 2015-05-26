@@ -1,8 +1,10 @@
 
 package droneon.model;
 
+import droneon.model.Rocket;
 import js.Browser;
 import nape.constraint.DistanceJoint;
+import nape.constraint.WeldJoint;
 import nape.geom.Vec2;
 import nape.phys.Body;
 import nape.shape.Circle;
@@ -14,26 +16,29 @@ class Drone implements Entity {
 
 	private var BALL:Bool;
 
+	// bodies
 	public var body(default,null):Body;
 	public var ball:Body;
+	public var thrusters:Array<Rocket> = [];
+	private var thrusterJoints:Array<WeldJoint> = [];
 
-	public var avgThrust(default,null) = [0.0, 0.0];
-	public var thrust = [0.0, 0.0];
+	// public var avgThrust(default,null) = [0.0, 0.0];
+	// public var thrust = [0.0, 0.0];
 
-	public var rotorDistance:Float;
+	// public var rotorDistance:Float;
 
 	public var massCenter:Vec2;
 
 	public var finForce = new Vec2();
 	public var bodyAirForce = new Vec2();
-	public var thrustForce = [new Vec2(), new Vec2()];
+	// public var thrustForce = [new Vec2(), new Vec2()];
 
 	private var finPos:Vec2;
 	private var rompPos:Vec2;
 
 	public function new(pos:Vec2, space:Space, rompOffset:Float, rompHeight:Float, rompWidth:Float, rotorDistance:Float) {
 
-		this.rotorDistance = rotorDistance;
+		// this.rotorDistance = rotorDistance;
 		this.BALL = tortilla.Tortilla.parameters.has("ball");
 
 		body = new Body();
@@ -45,18 +50,43 @@ class Drone implements Entity {
 		romp.translate(new Vec2(0,rompOffset));
 		romp.body = body;
 
-		for (a in 0...2) {
-			var sh2 = new Polygon(Polygon.rect(
-				rotorDistance * ([-1,1][a]) - 10, 
-				20,
-				20, 30
-			));
-			sh2.body = body;
-			// sh2.material.density *= 0.1;
-		}
 
 		massCenter = body.localCOM.copy();
 		body.align();
+
+
+		for (a in 0...2) {
+			var thLocalPos = new Vec2(rotorDistance * ([-1,1][a]), 20+15);//.sub(massCenter);
+		// for (a in 0...6) {
+			// var thLocalPos = new Vec2(-rotorDistance + (2*rotorDistance*0.2*a), 20+15).sub(massCenter);
+			var th = new Rocket(
+				pos.add(thLocalPos),
+				space,
+				ball == null ? 3500 : 4500
+			);
+			thrusters.push(th);
+
+			var joint = new WeldJoint(
+				body, th.body,
+				body.worldPointToLocal(th.body.localPointToWorld(new Vec2())), new Vec2()
+			);
+			joint.stiff = false;
+			joint.damping = 0.95;
+			joint.space = space;
+			// joint.breakUnderForce = true;
+			// joint.maxForce = 100000;
+			// joint.breakUnderError = true;
+			// joint.maxError = 30;
+			thrusterJoints.push(joint);
+
+			// var sh2 = new Polygon(Polygon.rect(
+			// 	rotorDistance * ([-1,1][a]) - 10, 
+			// 	20,
+			// 	20, 30
+			// ));
+			// sh2.body = body;
+			// sh2.material.density *= 0.1;
+		}
 
 		finPos = new Vec2(0, 30).sub(massCenter);
 		rompPos = new Vec2(0, rompOffset).sub(massCenter);
@@ -82,39 +112,69 @@ class Drone implements Entity {
 
 	}
 
+	private function angleDiff(a:Float, b:Float) {
+		var d = a-b;
+		d = Maths.doubleModulo(d + Math.PI, Maths.TWOPI) - Math.PI;
+		return d;
+	}
+
 	public function step(dt:Float) {
 
 		// thrusters
-		for (a in 0...2) {
+		for (th in 0...thrusters.length) {
 
-			// ease into the new thrust value
-			avgThrust[a] = Maths.averageEase(avgThrust[a], thrust[a], 20, dt);
-			var avg = avgThrust[a];
+			// TODO let the controller control this?
 
-			// create a thrust pointing up
-			var force = new Vec2(0, ball == null ? 3500 : 4500);
-			force = force.mul(avg);
-			
-			// it's in world space so apply body rotation
-			force.rotate(body.rotation);
+			var thrustTarget;
+			trace(body.velocity.length, angleDiff(body.rotation, Math.PI));
+			if (Math.abs(angleDiff(body.rotation, Math.PI)) < Maths.HALFPI) {
+				thrustTarget = 0.0;
+			} else {
 
-			// --- stabilization cheats
-			// counter angular velocity
-			force.rotate(-body.angularVel * 0.1);
-			// lean upwards
-			force = force.add(Vec2.fromPolar(force.length*0.33, Maths.HALFPI));
-			force = force.mul(1/1.33);
+				var a = angleDiff(body.rotation, 0);
 
-			// make the force publicly readable
-			thrustForce[a] = force;
-			
-			// get thruster local position
-			var point = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
+				thrustTarget = a * -0.25;
+				thrustTarget += body.angularVel * -0.05;
+				thrustTarget *= Math.min(body.velocity.length/1000, 1);
+				thrustTarget = Math.min(thrustTarget, Math.PI * 0.1);
 
-			// fire!
-			body.applyImpulse(force.mul(dt), body.localPointToWorld(point));
+			}
+			thrusterJoints[th].phase = Maths.averageEase(thrusterJoints[th].phase, thrustTarget, 20, dt);
+				
+			thrusters[th].step(dt);
 
 		}
+
+		// for (a in 0...2) {
+
+		// 	// ease into the new thrust value
+		// 	avgThrust[a] = Maths.averageEase(avgThrust[a], thrust[a], 20, dt);
+		// 	var avg = avgThrust[a];
+
+		// 	// create a thrust pointing up
+		// 	var force = new Vec2(0, ball == null ? 3500 : 4500);
+		// 	force = force.mul(avg);
+			
+		// 	// it's in world space so apply body rotation
+		// 	force.rotate(body.rotation);
+
+		// 	// --- stabilization cheats
+		// 	// counter angular velocity
+		// 	force.rotate(-body.angularVel * 0.1);
+		// 	// lean upwards
+		// 	force = force.add(Vec2.fromPolar(force.length*0.33, Maths.HALFPI));
+		// 	force = force.mul(1/1.33);
+
+		// 	// make the force publicly readable
+		// 	thrustForce[a] = force;
+			
+		// 	// get thruster local position
+		// 	var point = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
+
+		// 	// fire!
+		// 	body.applyImpulse(force.mul(dt), body.localPointToWorld(point));
+
+		// }
 
 		// fin drag
 		var finVel = getPointWorldVelocity(body, finPos);		
@@ -139,19 +199,19 @@ class Drone implements Entity {
 		}
 
 		// thruster drag
-		for (a in 0...2) {
-			var thrustPos = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
-			var thrustVel = getPointWorldVelocity(body, thrustPos);
-			if (thrustVel.length != 0) {
+		// for (a in 0...2) {
+		// 	var thrustPos = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
+		// 	var thrustVel = getPointWorldVelocity(body, thrustPos);
+		// 	if (thrustVel.length != 0) {
 
-				var wRompWind = thrustVel.copy().mul(-1);
-				wRompWind.length = Math.pow(wRompWind.length, 2);
-				var thrustAirForce = wRompWind.copy().mul(0.0002);
+		// 		var wRompWind = thrustVel.copy().mul(-1);
+		// 		wRompWind.length = Math.pow(wRompWind.length, 2);
+		// 		var thrustAirForce = wRompWind.copy().mul(0.0002);
 
-				body.applyImpulse(thrustAirForce.mul(dt), body.localPointToWorld(thrustPos));
+		// 		body.applyImpulse(thrustAirForce.mul(dt), body.localPointToWorld(thrustPos));
 
-			}
-		}
+		// 	}
+		// }
 
 		// romp drag
 		var rompVel = getPointWorldVelocity(body, rompPos);

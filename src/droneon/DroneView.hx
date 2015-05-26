@@ -74,58 +74,40 @@ class DroneView {
 		});
 
 
-		for (a in 0...2) {
+		for (th in drone.thrusters) {
 
-			var flip = [-1,1][a];
+			var boost = new Object3D();
+			spaceGraph.add(boost);
 
-		// 	droneGraph.lineStyle(4, 0x887766);
-		// 	droneGraph.moveTo(ox + flip*rompWidth * 0.4, oy + -(rompHeight/2)+rompOffset);
-		// 	droneGraph.lineTo(ox + flip*(drone.rotorDistance - 5), oy + -45);
+			var boostBox = new Mesh(new BoxGeometry(20, 30, 20), new MeshLambertMaterial({color: 0xFFFF00}));
+			boost.add(boostBox);
 
-		// 	droneGraph.lineStyle();
-		// 	droneGraph.beginFill(0xFFFF00);
-		// 	droneGraph.drawRect(ox + drone.rotorDistance*flip - 10, oy + -50, 20, 30);
-		// 	droneGraph.endFill();
+			var bar = new Mesh(new BoxGeometry(16, 100, 16), new MeshLambertMaterial({color: 0xFF8800}));
+			boost.add(bar);
 
-			var boost = new Mesh(new BoxGeometry(20, 30, 20), new MeshLambertMaterial({color: 0xFFFF00}));
-			boost.position.x = ox + drone.rotorDistance * flip;
-			boost.position.y = oy + 35;
-			droneGraph.add(boost);
+			views.push(function(dt) {
+				boost.position.x = th.body.position.x;
+				boost.position.y = th.body.position.y;
+				boost.rotation.z = th.body.rotation;
+
+				bar.scale.y = th.actualThrust;
+				bar.position.y = -50 * bar.scale.y;
+			});
 
 		}
 		var romp = new Mesh(new BoxGeometry(rompWidth, rompHeight, rompWidth), new MeshLambertMaterial({color: color}));
 		romp.position.x = ox;
 		romp.position.y = oy + rompOffset;
 		droneGraph.add(romp);
-		// droneGraph.beginFill(player ? 0xFFFFFF : 0x888888);
-		// droneGraph.drawRect(ox + -rompWidth/2, oy + -(rompHeight/2)+rompOffset,rompWidth,rompHeight);
-		// droneGraph.endFill();
-
+	
 		// center of mass
 		if (DRAW_FORCES) {
-			// droneGraph.beginFill(0x009900);
-			// droneGraph.drawCircle(0,0,1);
 			droneGraph.add(new Mesh(new BoxGeometry(1,1,200), new MeshLambertMaterial({color: 0x009900})));
 		}
 
-		// var fbs = 0.05;
-
 		for (a in 0...2) {
 
-			var flip = [-1,1][a];
-
-			var bar = new Mesh(new BoxGeometry(16, 200, 16), new MeshLambertMaterial({color: 0xFF8800}));
-			// bar.beginFill(0xFF8800, 0.5);
-			// bar.drawRect(-8, -100, 16, 100);
-			// bar.endFill();
-
-			droneGraph.add(bar);
-			bar.position.y = oy+20;
-			bar.position.x = ox+(drone.rotorDistance) * flip;
-
-			views.push(function(dt) {
-				bar.scale.y = drone.avgThrust[a];
-			});
+			
 
 		// 	if (DRAW_FORCES) {
 
@@ -192,11 +174,6 @@ class DroneView {
 	}
 
 	public function update(dt:Float) {
-
-		// position.x = drone.body.position.x;
-		// position.y = drone.body.position.y;
-		// rotation = drone.body.rotation;
-
 		for (v in views) v(dt);
 	}
 
