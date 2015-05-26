@@ -86,7 +86,7 @@ class Main {
 
 		stage = new Scene();
 
-		cam = new PerspectiveCamera(60, 1, 100, 10000);
+		cam = new PerspectiveCamera(60, 1, 100, 15000);
 		cam.position.z = 750;
 		stage.add(cam);
 		cam.lookAt(new Vector3());
@@ -347,6 +347,7 @@ class Main {
 		var h = Tortilla.canvas.height;
 		// renderer.resize(w,h);
 		var aspect = w / h;
+		trace("adapt to aspect", aspect);
 		cam.aspect = aspect;
 		renderer.setSize(w,h,false);
 
@@ -392,7 +393,8 @@ class Main {
 		if (pdVel.length > 200) pdVel.length = 200;
 
 		var minZ = 0.0;
-		if (playerDrones.length == 2) minZ = playerDrones[0].body.position.add(playerDrones[1].body.position.mul(-1)).length;
+		if (playerDrones.length == 2)
+			minZ = playerDrones[0].body.position.add(playerDrones[1].body.position.mul(-1)).length * 1.25;
 
 		var camPos2d = pdPos.add(pdVel.mul(0.5));
 		var camPos = new Vector3(camPos2d.x, camPos2d.y, Math.max(minZ, 700 + pdvl * 0.6));
@@ -410,6 +412,7 @@ class Main {
 			// -avgCamPos.y + Tortilla.canvas.height/2
 		// );
 
+		cam.updateProjectionMatrix();
 		renderer.render(stage, cam);
 
 	}

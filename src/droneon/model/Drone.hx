@@ -138,6 +138,21 @@ class Drone implements Entity {
 
 		}
 
+		// thruster drag
+		for (a in 0...2) {
+			var thrustPos = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
+			var thrustVel = getPointWorldVelocity(body, thrustPos);
+			if (thrustVel.length != 0) {
+
+				var wRompWind = thrustVel.copy().mul(-1);
+				wRompWind.length = Math.pow(wRompWind.length, 2);
+				var thrustAirForce = wRompWind.copy().mul(0.0002);
+
+				body.applyImpulse(thrustAirForce.mul(dt), body.localPointToWorld(thrustPos));
+
+			}
+		}
+
 		// romp drag
 		var rompVel = getPointWorldVelocity(body, rompPos);
 		if (rompVel.length != 0) {
