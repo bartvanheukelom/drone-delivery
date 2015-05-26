@@ -12,7 +12,7 @@ import weber.Maths;
 
 class Drone implements Entity {
 
-	private static inline var BALL = false;
+	private var BALL:Bool;
 
 	public var body(default,null):Body;
 	public var ball:Body;
@@ -34,6 +34,7 @@ class Drone implements Entity {
 	public function new(pos:Vec2, space:Space, rompOffset:Float, rompHeight:Float, rompWidth:Float, rotorDistance:Float) {
 
 		this.rotorDistance = rotorDistance;
+		this.BALL = tortilla.Tortilla.parameters.has("ball");
 
 		body = new Body();
 		body.space = space;

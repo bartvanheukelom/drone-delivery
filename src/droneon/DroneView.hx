@@ -19,7 +19,7 @@ class DroneView {
 	private var views:Array<Dynamic> = [];
 	private var drone:Drone;
 
-	public function new(drone:Drone, player:Bool, spaceGraph:Scene) {
+	public function new(drone:Drone, color:Int, spaceGraph:Scene) {
 
 		this.drone = drone;
 
@@ -93,7 +93,7 @@ class DroneView {
 			droneGraph.add(boost);
 
 		}
-		var romp = new Mesh(new BoxGeometry(rompWidth, rompHeight, rompWidth), new MeshLambertMaterial({color: player ? 0xFFFFFF : 0x888888}));
+		var romp = new Mesh(new BoxGeometry(rompWidth, rompHeight, rompWidth), new MeshLambertMaterial({color: color}));
 		romp.position.x = ox;
 		romp.position.y = oy + rompOffset;
 		droneGraph.add(romp);

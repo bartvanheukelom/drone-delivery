@@ -155,12 +155,12 @@ class Main {
 		var rotorDistance = 75;
 
 		function addDroneView(drone:Drone) {
-			var v = new DroneView(drone, playerDrones.indexOf(drone) != -1, stage);
+			var v = new DroneView(drone, [0x888888, 0xFFFFFF, 0x00FF00, 0x0000FF][playerDrones.indexOf(drone) + 1], stage);
 			views.push(v);
 		}
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
-			var drone = new Drone(new Vec2(2200+px*300, 200), space, rompOffset, rompHeight, rompWidth, rotorDistance);
+			var drone = new Drone(new Vec2(2100+px*250, 200), space, rompOffset, rompHeight, rompWidth, rotorDistance);
 			playerDrones.push(drone);
 			entities.push(drone);
 			addDroneView(drone);
@@ -171,11 +171,14 @@ class Main {
 				for (a in 0...2) {
 				
 					var thrust;
-					if (KeyboardInput.isKeyDown([KeyboardInput.KEY_Q, KeyboardInput.KEY_P][a])) {
+					if (KeyboardInput.isKeyDown([
+						[KeyboardInput.KEY_Q, KeyboardInput.KEY_E],
+						[KeyboardInput.KEY_I, KeyboardInput.KEY_P],
+						][px][a])) {
 						thrust = 1.0;
 					} else {
-						if (!Tortilla.parameters.has("nopad") && pads.length > 0 && pads[0] != null) {
-							var pad = pads[0];
+						if (!Tortilla.parameters.has("nopad") && pads.length > px && pads[px] != null) {
+							var pad = pads[px];
 							var ax = [2,5][a];
 							thrust = Maths.rangeNormalize(pad.axes[ax], -1, 1);
 							// thrust = Math.pow(thrust, 2);
@@ -388,8 +391,11 @@ class Main {
 		var pdvl = pdVel.length;
 		if (pdVel.length > 200) pdVel.length = 200;
 
+		var minZ = 0.0;
+		if (playerDrones.length == 2) minZ = playerDrones[0].body.position.add(playerDrones[1].body.position.mul(-1)).length;
+
 		var camPos2d = pdPos.add(pdVel.mul(0.5));
-		var camPos = new Vector3(camPos2d.x, camPos2d.y, 700 + pdvl * 0.6);
+		var camPos = new Vector3(camPos2d.x, camPos2d.y, Math.max(minZ, 700 + pdvl * 0.6));
 		if (avgCamPos == null) avgCamPos = camPos;
 		else {
 			avgCamPos.x = Maths.averageEase(avgCamPos.x, camPos.x, 10, dt);
