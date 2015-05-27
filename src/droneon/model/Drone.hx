@@ -55,14 +55,22 @@ class Drone implements Entity {
 		body.align();
 
 
-		for (a in 0...2) {
-			var thLocalPos = new Vec2(rotorDistance * ([-1,1][a]), 20+15);//.sub(massCenter);
-		// for (a in 0...6) {
-			// var thLocalPos = new Vec2(-rotorDistance + (2*rotorDistance*0.2*a), 20+15).sub(massCenter);
+		// for (a in 0...2) {
+		// 	var thLocalPos = new Vec2(rotorDistance * ([-1,1][a]), 20+15);//.sub(massCenter);
+		var tc = 2;
+		var totalPower = ball == null ? 7000 : 9000;
+		for (a in 0...tc) {
+			var thLocalPos = new Vec2(
+				tc > 1
+				? (-rotorDistance + (2*rotorDistance*(1/(tc-1))*a))
+				: 0,
+				20+15
+			);
 			var th = new Rocket(
 				pos.add(thLocalPos),
 				space,
-				ball == null ? 3500 : 4500
+				totalPower/tc,
+				-2 + 4*(a/(tc-1))
 			);
 			thrusters.push(th);
 
@@ -70,22 +78,26 @@ class Drone implements Entity {
 				body, th.body,
 				body.worldPointToLocal(th.body.localPointToWorld(new Vec2())), new Vec2()
 			);
-			joint.stiff = false;
-			joint.damping = 0.95;
 			joint.space = space;
-			// joint.breakUnderForce = true;
-			// joint.maxForce = 100000;
-			// joint.breakUnderError = true;
-			// joint.maxError = 30;
 			thrusterJoints.push(joint);
 
-			// var sh2 = new Polygon(Polygon.rect(
-			// 	rotorDistance * ([-1,1][a]) - 10, 
-			// 	20,
-			// 	20, 30
-			// ));
-			// sh2.body = body;
-			// sh2.material.density *= 0.1;
+			// breaking/bouncing
+			// joint.stiff = false;
+			// joint.damping = 0.95;
+			// joint.breakUnderForce = true;
+			// joint.maxForce = 100000;
+			joint.breakUnderError = true;
+			joint.maxError = 8;// 5;
+
+		
+			var backupJoint = new DistanceJoint(
+				body, th.body,
+				new Vec2(), new Vec2(0,-20),
+				0, th.body.localPointToWorld(new Vec2(0,-20)).addMul(body.position, -1).length * 1.25
+			);
+			backupJoint.space = space;
+			backupJoint.stiff = false;
+
 		}
 
 		finPos = new Vec2(0, 30).sub(massCenter);
@@ -126,7 +138,7 @@ class Drone implements Entity {
 			// TODO let the controller control this?
 
 			var thrustTarget;
-			trace(body.velocity.length, angleDiff(body.rotation, Math.PI));
+			// trace(body.velocity.length, angleDiff(body.rotation, Math.PI));
 			if (Math.abs(angleDiff(body.rotation, Math.PI)) < Maths.HALFPI) {
 				thrustTarget = 0.0;
 			} else {

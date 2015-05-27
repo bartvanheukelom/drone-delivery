@@ -14,16 +14,18 @@ class Rocket
 	public var maxPower:Float;
 	public var inThrust = 0.0;
 	public var actualThrust(default,null) = 0.0;
+	public var horOffset:Float;
 
-	public function new(pos:Vec2, space:Space, maxPower:Float) {
+	public function new(pos:Vec2, space:Space, maxPower:Float, horOffset:Float) {
 
 		this.maxPower = maxPower;
+		this.horOffset = horOffset;
 
 		body = new Body();
 		body.space = space;
 		body.position.set(pos);
 
-		var sh2 = new Polygon(Polygon.box(20, 30));
+		var sh2 = new Polygon(Polygon.box(24, 30));
 		sh2.body = body;
 
 	}
@@ -55,10 +57,10 @@ class Rocket
 		// thrustForce[a] = force;
 		
 		// get thruster local position
-		// var point = new Vec2(rotorDistance * [-1,1][a], 50).sub(massCenter);
+		var point = new Vec2(horOffset, -15);
 
 		// fire!
-		body.applyImpulse(force.mul(dt));//, body.localPointToWorld(point));
+		body.applyImpulse(force.mul(dt), body.localPointToWorld(point));
 
 
 
@@ -75,6 +77,10 @@ class Rocket
 			body.applyImpulse(thrustAirForce.mul(dt));
 
 		}
+
+		// rotational
+		if (body.angularVel < -10) trace(body.angularVel, Math.pow(body.angularVel, 2));
+		body.applyAngularImpulse(Math.pow(body.angularVel, 2) * -20 * Maths.signum(body.angularVel) * dt); // signum because the pow loses the sign
 
 	}
 

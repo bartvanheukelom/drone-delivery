@@ -23,9 +23,11 @@ import threejs.lights.AmbientLight;
 import threejs.lights.DirectionalLight;
 import threejs.materials.MeshBasicMaterial;
 import threejs.materials.MeshLambertMaterial;
+import threejs.materials.MeshPhongMaterial;
 import threejs.math.Vector3;
 import threejs.objects.Mesh;
 import threejs.renderers.WebGLRenderer;
+import threejs.scenes.Fog;
 import threejs.scenes.Scene;
 import tortilla.Tortilla;
 import weber.game.input.KeyboardInput;
@@ -83,26 +85,26 @@ class Main {
 			antialias: true,
 			devicePixelRatio: 1
 		});
+		// renderer.shadowMapEnabled = true;
 
 		stage = new Scene();
 
-		cam = new PerspectiveCamera(60, 1, 100, 15000);
+		cam = new PerspectiveCamera(45, 1, 100, 15000);
 		cam.position.z = 750;
 		stage.add(cam);
 		cam.lookAt(new Vector3());
 
+		stage.fog = new Fog(0x000000, 1500, 2000);
 
 		var ambient = new AmbientLight(0x557777);
+		// var ambient = new AmbientLight(0xFF0000);
 		stage.add(ambient);
-		// var sunTarget = new Object3D();
-		// scene.add(sunTarget);
 		var sun = new DirectionalLight(0x886666, 1);
 		sun.position.set(1,1.5,2.5);
 		stage.add(sun);
 		var sun2 = new DirectionalLight(0x000011, 1);
-		sun.position.set(1,-1.5,2.5);
-		stage.add(sun);
-		// sun.target = sunTarget;
+		sun2.position.set(1,-1.33,2.5);
+		stage.add(sun2);
 
 
 		// hud = new Container();
@@ -117,33 +119,37 @@ class Main {
 		// stage.addChild(spaceGraph);
 
 		var gs = 250;
-		var gz = -50;
-		// var grid = new Graphics();
-		// grid.lineStyle(1, 0x111111);
-		var gx = -500;
-		while (gx < 6000) {
-			var l = new Mesh(new BoxGeometry(1,11000,1), new MeshBasicMaterial({color: 0x111111}));
-			l.position.x = gx;
-			l.position.y = 5000;
-			l.position.z = gz;
-			stage.add(l);
-			// grid.moveTo(gx, 50);
-			// grid.lineTo(gx, -10050);
-			gx += gs;
-		}
-		var gy = 0;
-		while (gy < 10000) {
-			var l = new Mesh(new BoxGeometry(7100,1,1), new MeshBasicMaterial({color: 0x111111}));
-			l.position.x = 3000;
-			l.position.y = gy;
-			l.position.z = gz;
-			stage.add(l);
-			// grid.moveTo(-550, gy);
-			// grid.lineTo(6000, gy);
-			gy += gs;
-		}
-		// spaceGraph.addChild(grid);
+		var gz = -100;
+		while (gz > -2000) {
+			
+			// var grid = new Graphics();
+			// grid.lineStyle(1, 0x111111);
+			var gx = -500;
+			while (gx < 6000) {
+				var l = new Mesh(new BoxGeometry(1,11000,1), new MeshBasicMaterial({color: 0x111122}));
+				l.position.x = gx;
+				l.position.y = 5000;
+				l.position.z = gz;
+				stage.add(l);
+				// grid.moveTo(gx, 50);
+				// grid.lineTo(gx, -10050);
+				gx += gs;
+			}
+			var gy = 0;
+			while (gy < 10000) {
+				var l = new Mesh(new BoxGeometry(7100,1,1), new MeshBasicMaterial({color: 0x112211}));
+				l.position.x = 3000;
+				l.position.y = gy;
+				l.position.z = gz;
+				stage.add(l);
+				// grid.moveTo(-550, gy);
+				// grid.lineTo(6000, gy);
+				gy += gs;
+			}
+			// spaceGraph.addChild(grid);
 
+			gz -= 500;
+		}
 
 		// var bloom1 = untyped __js__("new PIXI.filters.BloomFilter()");
 		// bloom1.blur = 3;
@@ -160,7 +166,7 @@ class Main {
 		}
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
-			var drone = new Drone(new Vec2(2100+px*250, 200), space, rompOffset, rompHeight, rompWidth, rotorDistance);
+			var drone = new Drone(new Vec2(3700+px*250, 600), space, rompOffset, rompHeight, rompWidth, rotorDistance);
 			playerDrones.push(drone);
 			entities.push(drone);
 			addDroneView(drone);
@@ -226,15 +232,17 @@ class Main {
 
 		// ================ build level ==================== //
 
-		function addGround(x:Float, y:Float, width:Float, height:Float, color:Int = 0x8888FF, dyn = false) {
+		function addGround(x:Float, y:Float, width:Float, height:Float, color:Int = 0x8888FF, dyn = false, deep = false) {
 
 			var cx = x+(width/2);
 			var cy = y-(height/2);
 
-			var gm = new BoxGeometry(width,height,dyn ? width : 100);
-			var mm = new MeshLambertMaterial({color: color});
+			var gm = new BoxGeometry(width,height,dyn ? width : (deep ? 6000 : 200));
+			var mm = new MeshPhongMaterial({color: color, ambient: color});
 			var ms = new Mesh(gm, mm);
-			ms.position.set(cx, cy, 0);
+			// ms.receiveShadow = true;
+			// ms.castShadow = true;
+			ms.position.set(cx, cy, deep ? -3000 + 100 : 0);
 			stage.add(ms);
 
 			// var gg = new Graphics();
@@ -266,10 +274,10 @@ class Main {
 		var blue = 0x8888FF;
 
 		// bounds
-		addGround(-1500,9980,	1020,	9960, 	red); // left
-		addGround(-1500,20,	8500,	1000, 	red); // bottom
-		addGround(5980,	10000,	1020,	9980, 	red); // right
-		addGround(-1500,11000,	8500,	1000, 	red); // top
+		addGround(-1500,10000,	1020,	9960, 	red, false, true); // left
+		addGround(-1500,20,	8500,	1000, 	red, false, true); // bottom
+		addGround(5980,	10000,	1020,	9980, 	red, false, true); // right
+		addGround(-1500,11000,	8500,	1000, 	red, false, true); // top
 
 		// --- platforms area 1
 		addGround(100,800,150,20, green);
@@ -303,7 +311,7 @@ class Main {
 		// platforms on right wall
 		var prwy = 300;
 		while (prwy < 9800) {
-			addGround(5880, prwy, 100, 20, green);
+			addGround(5830, prwy, 150, 20, green);
 			prwy += 500;
 		}
 
@@ -371,6 +379,8 @@ class Main {
 		// move the world
 		var wdt = dt/1;
 		for (e in entities) e.step(wdt);
+		// for (s in 0...10)
+		// 	space.step(wdt/10);
 		space.step(wdt);
 
 		for (v in views) v.update(wdt);
@@ -378,16 +388,23 @@ class Main {
 		// --- update camera
 
 		var pdPos = new Vec2();
+		var pdPosDiv = 0;
 		var pdVel = new Vec2();
 		for (pd in playerDrones) {
 			pdPos = pdPos.add(pd.body.position);
+			pdPosDiv++;
 			pdVel = pdVel.add(pd.body.velocity);
+
+			for (th in pd.thrusters) {
+				pdPos = pdPos.add(th.body.position);
+				pdPosDiv++;
+			}
 
 			// trace(pd.body.velocity.x, pd.body.localVectorToWorld(new Vec2(0,-70)).x);
 			// trace(pd.headVel.x, pd.headVel.y);
 		}
 		// trace(pdPos.x, pdPos.x);
-		pdPos = pdPos.mul(1/playerDrones.length);
+		pdPos = pdPos.mul(1/pdPosDiv);
 		pdVel = pdVel.mul(1/playerDrones.length);
 
 		var pdvl = pdVel.length;
@@ -407,7 +424,7 @@ class Main {
 		}
 		cam.position.x = avgCamPos.x;
 		cam.position.y = avgCamPos.y;
-		cam.position.z = avgCamPos.z;
+		cam.position.z = avgCamPos.z * 60/cam.fov;
 		// spaceGraph.position.set(
 			// -avgCamPos.x + Tortilla.canvas.width/2,
 			// -avgCamPos.y + Tortilla.canvas.height/2
