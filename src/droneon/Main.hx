@@ -2,6 +2,7 @@
 package droneon;
 
 import droneon.DroneView;
+import droneon.model.Block;
 import droneon.model.Drone;
 import droneon.model.Entity;
 import droneon.model.World;
@@ -14,6 +15,7 @@ import nape.shape.Polygon;
 import nape.shape.Shape;
 import nape.space.Space;
 
+import pixi.core.math.shapes.Rectangle;
 import threejs.cameras.PerspectiveCamera;
 import threejs.extras.geometries.BoxGeometry;
 import threejs.lights.AmbientLight;
@@ -151,10 +153,7 @@ class Main {
 		var rompWidth = 80;
 		var rotorDistance = 75;
 
-		function addDroneView(drone:Drone) {
-			var v = new DroneView(drone, [0x888888, 0xFFFFFF, 0x00FF00, 0x0000FF][playerDrones.indexOf(drone) + 1], stage);
-			views.push(v);
-		}
+		
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
 			var drone = new Drone(new Vec2(3700+px*250, 200), world, rompOffset, rompHeight, rompWidth, rotorDistance);
@@ -222,41 +221,9 @@ class Main {
 		// ================ build level ==================== //
 
 		function addGround(x:Float, y:Float, width:Float, height:Float, color:Int = 0x8888FF, dyn = false, deep = false) {
-
-			var cx = x+(width/2);
-			var cy = y-(height/2);
-
-			var gm = new BoxGeometry(width,height,dyn ? width : (deep ? 6000 : 200));
-			var mm = new MeshPhongMaterial({color: color, ambient: color});
-			var ms = new Mesh(gm, mm);
-			// ms.receiveShadow = true;
-			// ms.castShadow = true;
-			ms.position.set(cx, cy, deep ? -3000 + 100 : 0);
-			stage.add(ms);
-
-			// var gg = new Graphics();
-			// gg.beginFill(color);
-			// gg.drawRect(-width/2,-height/2,width,height);
-			// gg.endFill();
-			// spaceGraph.addChild(gg);
-			// gg.position.set(cx, cy);
-
-			var b = new Body(dyn ? BodyType.DYNAMIC : BodyType.STATIC);
-			var s = new Polygon(Polygon.box(width,height));
-			s.material.density *= 0.1;
-			s.material.dynamicFriction *= 5;
-			s.material.staticFriction *= 5;
-			s.body = b;
-			b.position.setxy(cx, cy);
-			b.space = world.space;
-
-			if (dyn) views.push({update: function(dt) {
-				ms.position.x = b.position.x;
-				ms.position.y = b.position.y;
-				ms.rotation.z = b.rotation;
-			}});
-
+			addBlockView(new Block(world, new Rectangle(x, y, width, height), color, dyn, deep));
 		}
+		
 
 		var red = 0xFF4444;
 		var green = 0x66FF66;
@@ -337,6 +304,32 @@ class Main {
 		// 	pad = e.gamepad;
 		// });
 
+
+	}
+
+	private function addDroneView(drone:Drone) {
+		var v = new DroneView(drone, [0x888888, 0xFFFFFF, 0x00FF00, 0x0000FF][playerDrones.indexOf(drone) + 1], stage);
+		views.push(v);
+	}
+
+	private function addBlockView(b:Block) {
+
+		var cx = b.rect.x+(b.rect.width/2);
+		var cy = b.rect.y-(b.rect.height/2);
+
+		var gm = new BoxGeometry(b.rect.width,b.rect.height, b.dyn ? b.rect.width : (b.deep ? 6000 : 200));
+		var mm = new MeshPhongMaterial({color: b.color, ambient: b.color});
+		var ms = new Mesh(gm, mm);
+		// ms.receiveShadow = true;
+		// ms.castShadow = true;
+		ms.position.set(cx, cy, b.deep ? -3000 + 100 : 0);
+		stage.add(ms);
+
+		if (b.dyn) views.push({update: function(dt) {
+			ms.position.x = b.body.position.x;
+			ms.position.y = b.body.position.y;
+			ms.rotation.z = b.body.rotation;
+		}});
 
 	}
 

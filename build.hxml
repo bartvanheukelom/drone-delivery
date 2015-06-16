@@ -4,7 +4,7 @@
 -cp /home/bart/weber/share/haxe-common/trunk
 
 -lib nape
-#-lib pixijs
+-lib pixijs
 
 #this class wil be used as entry point for your app.
 -main droneon.Main
