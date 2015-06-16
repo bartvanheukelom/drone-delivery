@@ -2,6 +2,7 @@
 package droneon.model;
 
 import droneon.model.Rocket;
+import droneon.model.World;
 import js.Browser;
 import nape.constraint.DistanceJoint;
 import nape.constraint.WeldJoint;
@@ -36,13 +37,13 @@ class Drone implements Entity {
 	private var finPos:Vec2;
 	private var rompPos:Vec2;
 
-	public function new(pos:Vec2, space:Space, rompOffset:Float, rompHeight:Float, rompWidth:Float, rotorDistance:Float) {
+	public function new(pos:Vec2, world:World, rompOffset:Float, rompHeight:Float, rompWidth:Float, rotorDistance:Float) {
 
 		// this.rotorDistance = rotorDistance;
 		this.BALL = tortilla.Tortilla.parameters.has("ball");
 
 		body = new Body();
-		body.space = space;
+		body.space = world.space;
 		body.position.set(pos);
 
 		var romp = new Polygon(Polygon.box(rompWidth,rompHeight));
@@ -68,7 +69,7 @@ class Drone implements Entity {
 			);
 			var th = new Rocket(
 				pos.add(thLocalPos),
-				space,
+				world.space,
 				totalPower/tc,
 				-2 + 4*(a/(tc-1))
 			);
@@ -78,7 +79,7 @@ class Drone implements Entity {
 				body, th.body,
 				body.worldPointToLocal(th.body.localPointToWorld(new Vec2())), new Vec2()
 			);
-			joint.space = space;
+			joint.space = world.space;
 			thrusterJoints.push(joint);
 
 			// breaking/bouncing
@@ -95,7 +96,7 @@ class Drone implements Entity {
 				new Vec2(), new Vec2(0,-20),
 				0, th.body.localPointToWorld(new Vec2(0,-20)).addMul(body.position, -1).length * 1.25
 			);
-			backupJoint.space = space;
+			backupJoint.space = world.space;
 			backupJoint.stiff = false;
 
 		}
@@ -109,7 +110,7 @@ class Drone implements Entity {
 
 			ball = new Body();
 			ball.position.set(body.position.add(new Vec2(0, -100)));
-			ball.space = space;
+			ball.space = world.space;
 
 			var ballsh = new Circle(20);
 			ballsh.material.density = 5;
@@ -118,9 +119,11 @@ class Drone implements Entity {
 			var chain = new DistanceJoint(body, ball, rompPos, new Vec2(0,0), 30, 210);
 			chain.stiff = false;
 			chain.damping = 1;
-			chain.space = space;
+			chain.space = world.space;
 
 		}
+
+		world.entities.push(this);
 
 	}
 

@@ -4,6 +4,7 @@ package droneon;
 import droneon.DroneView;
 import droneon.model.Drone;
 import droneon.model.Entity;
+import droneon.model.World;
 import js.Browser;
 import js.html.Gamepad;
 import nape.geom.Vec2;
@@ -12,11 +13,7 @@ import nape.phys.BodyType;
 import nape.shape.Polygon;
 import nape.shape.Shape;
 import nape.space.Space;
-import pixi.core.display.Container;
 
-import pixi.core.graphics.Graphics;
-import pixi.core.renderers.Detector;
-import pixi.core.renderers.SystemRenderer;
 import threejs.cameras.PerspectiveCamera;
 import threejs.extras.geometries.BoxGeometry;
 import threejs.lights.AmbientLight;
@@ -39,18 +36,12 @@ class Main {
 	private var renderer:WebGLRenderer;
 	private var cam:PerspectiveCamera;
 
-	// private var hud:Container;
-
-	private var space:Space;
-	// private var spaceGraph:Container;
-
-	private var controllers:Array<Float->Void> = [];
-	private var entities:Array<Entity> = [];
+	private var controllers:Array<Float->Void> = [];	
 	private var views:Array<Dynamic> = [];
 
 	private var playerDrones:Array<Drone> = [];
 
-	// private var pad:Gamepad;
+	private var world:World;
 
 	public static function main() {
 		Tortilla.game = new Main();
@@ -94,7 +85,7 @@ class Main {
 		stage.add(cam);
 		cam.lookAt(new Vector3());
 
-		stage.fog = new Fog(0x000000, 1500, 2000);
+		stage.fog = new Fog(0x000000, 0, 1000);
 
 		var ambient = new AmbientLight(0x557777);
 		// var ambient = new AmbientLight(0xFF0000);
@@ -113,7 +104,7 @@ class Main {
 		Tortilla.addEventListener(Tortilla.EV_RESIZED, adaptToSize);
 		adaptToSize();		
 
-		space = new Space(new Vec2(0, -500));
+		world = new World();
 
 		// spaceGraph = new Container();
 		// stage.addChild(spaceGraph);
@@ -166,9 +157,8 @@ class Main {
 		}
 
 		for (px in 0...Std.parseInt(Tortilla.parameters.get("drones", "1"))) {
-			var drone = new Drone(new Vec2(3700+px*250, 600), space, rompOffset, rompHeight, rompWidth, rotorDistance);
+			var drone = new Drone(new Vec2(3700+px*250, 200), world, rompOffset, rompHeight, rompWidth, rotorDistance);
 			playerDrones.push(drone);
-			entities.push(drone);
 			addDroneView(drone);
 			controllers.push(function(dt:Float) {
 
@@ -206,8 +196,7 @@ class Main {
 			var seq = hdSeq;
 			hdSeq += 1000;
 
-			var hoverDrone = new Drone(pos, space, rompOffset, rompHeight, rompWidth, rotorDistance);
-			entities.push(hoverDrone);
+			var hoverDrone = new Drone(pos, world, rompOffset, rompHeight, rompWidth, rotorDistance);
 			addDroneView(hoverDrone);
 
 			var targetHeight = hoverDrone.body.position.y;
@@ -259,7 +248,7 @@ class Main {
 			s.material.staticFriction *= 5;
 			s.body = b;
 			b.position.setxy(cx, cy);
-			b.space = space;
+			b.space = world.space;
 
 			if (dyn) views.push({update: function(dt) {
 				ms.position.x = b.position.x;
@@ -378,10 +367,7 @@ class Main {
 
 		// move the world
 		var wdt = dt/1;
-		for (e in entities) e.step(wdt);
-		// for (s in 0...10)
-		// 	space.step(wdt/10);
-		space.step(wdt);
+		world.step(wdt);
 
 		for (v in views) v.update(wdt);
 
@@ -425,6 +411,11 @@ class Main {
 		cam.position.x = avgCamPos.x;
 		cam.position.y = avgCamPos.y;
 		cam.position.z = avgCamPos.z * 60/cam.fov;
+
+		stage.fog.near = cam.position.z + 0;
+		stage.fog.far = stage.fog.near + 1000;
+		
+
 		// spaceGraph.position.set(
 			// -avgCamPos.x + Tortilla.canvas.width/2,
 			// -avgCamPos.y + Tortilla.canvas.height/2

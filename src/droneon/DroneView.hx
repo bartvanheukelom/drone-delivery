@@ -2,8 +2,6 @@
 package droneon;
 
 import droneon.model.Drone;
-import pixi.core.display.Container;
-import pixi.core.graphics.Graphics;
 import threejs.core.Object3D;
 import threejs.extras.geometries.BoxGeometry;
 import threejs.extras.geometries.CylinderGeometry;

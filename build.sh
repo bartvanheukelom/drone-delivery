@@ -2,7 +2,7 @@
 
 set -e
 
-haxe -v --connect 6000 build.hxml
+haxe -v --connect 6001 build.hxml
 
 #tortilla build nw
 #./build/nw/linux64/game
